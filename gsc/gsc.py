@@ -15,12 +15,17 @@ import sys
 import tempfile
 import uuid
 
-import docker  # pylint: disable=import-error
+import docker
 import jinja2
 import shlex
-import tomli   # pylint: disable=import-error
-import tomli_w # pylint: disable=import-error
-import yaml    # pylint: disable=import-error
+import tomli
+import tomli_w
+import yaml
+
+MODULE_PATH = pathlib.Path(__file__).parent
+TEMPLATES_PATH = os.path.join(MODULE_PATH, 'templates')
+KEYS_PATH = os.path.join(MODULE_PATH, 'keys')
+FINALIZE_MANIFEST_PATH = os.path.join(MODULE_PATH, 'finalize_manifest.py')
 
 class DistroRetrievalError(Exception):
     def __init__(self, *args):
@@ -47,7 +52,7 @@ def gsc_unsigned_image_name(original_image_name):
     return f'gsc-{original_image_name}-unsigned'
 
 def gsc_tmp_build_path(original_image_name):
-    return pathlib.Path('build') / f'gsc-{original_image_name}'
+    return pathlib.Path('../build') / f'gsc-{original_image_name}'
 
 
 def get_docker_image(docker_socket, image_name):
@@ -268,9 +273,11 @@ def fetch_and_validate_distro_support(docker_socket, image_name, env):
         distro = get_image_distro(docker_socket, image_name)
         env.globals['Distro'] = distro
 
-    distro = distro.split(':')[0]
-    if not os.path.exists(f'templates/{distro}'):
-        raise FileNotFoundError(f'`{distro}` distro is not supported by GSC.')
+    distro, _ = distro.split(':')
+    distro_path = os.path.join(TEMPLATES_PATH, distro)
+    if not os.path.exists(distro_path):
+        print(f'{distro} distro is not supported by GSC. (Distro path: {distro_path})')
+        sys.exit(1)
 
     return distro
 
@@ -327,7 +334,7 @@ def gsc_build(args):
         sys.exit(1)
 
     env.globals.update({'compile_template': f'{distro}/Dockerfile.compile.template'})
-    env.loader = jinja2.FileSystemLoader('templates/')
+    env.loader = jinja2.FileSystemLoader(TEMPLATES_PATH)
 
     # generate Dockerfile.build from Jinja-style templates/<distro>/Dockerfile.build.template
     # using the user-provided config file with info on OS distro, Gramine version and SGX driver
@@ -382,11 +389,12 @@ def gsc_build(args):
         tomli_w.dump(merged_manifest_dict, entrypoint_manifest)
 
     # copy helper script to finalize the manifest from within graminized Docker image
-    shutil.copyfile('finalize_manifest.py', tmp_build_path / 'finalize_manifest.py')
+    shutil.copyfile(FINALIZE_MANIFEST_PATH, tmp_build_path / 'finalize_manifest.py')
 
     # Intel's SGX PGP RSA-2048 key signing the intel-sgx/sgx_repo repository. Expires 2027-03-20.
     # Available at https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key
-    shutil.copyfile('keys/intel-sgx-deb.key', tmp_build_path / 'intel-sgx-deb.key')
+
+    shutil.copyfile(os.path.join(KEYS_PATH, 'intel-sgx-deb.key'), tmp_build_path / 'intel-sgx-deb.key')
 
     handle_redhat_repo_configs(distro, tmp_build_path)
 
@@ -434,11 +442,12 @@ def gsc_build_gramine(args):
         sys.exit(1)
 
     distro, _ = distro.split(':')
-    if not os.path.exists(f'templates/{distro}'):
-        print(f'{distro} distro is not supported by GSC.')
+    distro_path = os.path.join(TEMPLATES_PATH, distro)
+    if not os.path.exists(distro_path):
+        print(f'{distro} distro is not supported by GSC. (Template path: {distro_path})')
         sys.exit(1)
 
-    env.loader = jinja2.FileSystemLoader('templates/')
+    env.loader = jinja2.FileSystemLoader(TEMPLATES_PATH)
 
     # generate Dockerfile.compile from Jinja-style templates/<distro>/Dockerfile.compile.template
     # using the user-provided config file with info on OS distro, Gramine version and SGX driver
@@ -454,7 +463,7 @@ def gsc_build_gramine(args):
 
     # Intel's SGX PGP RSA-1024 key signing the intel-sgx/sgx_repo repository. Expires 2023-05-24.
     # Available at https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key
-    shutil.copyfile('keys/intel-sgx-deb.key', tmp_build_path / 'intel-sgx-deb.key')
+    shutil.copyfile(os.path.join(KEYS_PATH, 'intel-sgx-deb.key'), tmp_build_path / 'intel-sgx-deb.key')
 
     handle_redhat_repo_configs(distro, tmp_build_path)
 
@@ -499,7 +508,7 @@ def gsc_sign_image(args):
         print(e, file=sys.stderr)
         sys.exit(1)
 
-    env.loader = jinja2.FileSystemLoader('templates/')
+    env.loader = jinja2.FileSystemLoader(TEMPLATES_PATH)
     sign_template = env.get_template(f'{distro}/Dockerfile.sign.template')
 
     os.makedirs(tmp_build_path, exist_ok=True)

@@ -4,9 +4,7 @@
 #                    Anjo Vahldiek-Oberwagner <anjo.lucas.vahldiek-oberwagner@intel.com>
 
 import sys
-import os
 
-sys.path.insert(0, os.path.dirname(__file__))
-from gsc import main # pylint: disable=import-error,wrong-import-position
+from gsc.gsc import main
 
 sys.exit(main(sys.argv))

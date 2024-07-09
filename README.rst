@@ -58,3 +58,15 @@ For any questions, please send an email to users@gramineproject.io
 
 For bug reports, post an issue on our GitHub repository:
 https://github.com/gramineproject/gsc/issues.
+
+Installation
+============
+
+To install this package from source, run the following commands:
+
+.. code-block:: bash
+
+   git clone
+   cd gsc
+   python setup.py sdist bdist_wheel
+   pip install .
