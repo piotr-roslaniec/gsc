@@ -167,7 +167,7 @@ def main(args=None):
         )
     else:
         print(
-            f"\t[from inside Docker container] Skipping trusted files generation. This image must not be used in production."
+            "\t[from inside Docker container] Skipping trusted files generation. This image must not be used in production."
         )
 
     with open(manifest, "wb") as manifest_file:

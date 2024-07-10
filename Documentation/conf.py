@@ -18,7 +18,6 @@
 
 import collections
 import pathlib
-import subprocess
 
 # -- Project information -----------------------------------------------------
 

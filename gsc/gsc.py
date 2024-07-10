@@ -257,9 +257,9 @@ def handle_redhat_repo_configs(distro, tmp_build_path):
             sslclientkey_dir = os.path.dirname(sslclientkey_path)
         else:
             print(
-                f"Cannot find SSL client key path in /etc/yum.repos.d/redhat.repo. "
-                f"Register and subscribe your RHEL system to the Red Hat Customer "
-                f"Portal using Red Hat Subscription-Manager."
+                "Cannot find SSL client key path in /etc/yum.repos.d/redhat.repo. "
+                "Register and subscribe your RHEL system to the Red Hat Customer "
+                "Portal using Red Hat Subscription-Manager."
             )
             sys.exit(1)
 
@@ -268,9 +268,9 @@ def handle_redhat_repo_configs(distro, tmp_build_path):
             sslcacert_path = match_sslcacert.group(1)
         else:
             print(
-                f"Cannot find SSL CA certificate path in /etc/yum.repos.d/redhat.repo. "
-                f"Register and subscribe your RHEL system to the Red Hat Customer "
-                f"Portal using Red Hat Subscription-Manager."
+                "Cannot find SSL CA certificate path in /etc/yum.repos.d/redhat.repo. "
+                "Register and subscribe your RHEL system to the Red Hat Customer "
+                "Portal using Red Hat Subscription-Manager."
             )
             sys.exit(1)
 
